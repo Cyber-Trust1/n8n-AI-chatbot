@@ -1,0 +1,314 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "You are an intelligent customer support assistant for an online store.\n\nYour job is to answer customer questions politely and professionally.\n\nWhen a customer asks about products, prices, stock, specifications, or availability, always use the connected Google Sheets tool to find the correct information before answering.\n\nNever make up prices or stock levels.\n\nIf the requested product cannot be found, politely inform the customer and suggest asking about another product.\n\nKeep your replies short, friendly, and helpful.\n\nIf you cannot answer a question, advise the customer that a human support representative will assist them\n\nWhen a customer asks about any product, you MUST use the Google Sheets tool before answering.\n\nSearch the \"Product Name\" column using the customer's product name.\n\nNever answer from memory.\n\nAlways return the product price, stock and description from Google Sheets.\n\nIf you cannot find the answer in Google Sheets, or if the customer asks to speak with a human, your reply MUST begin with:\n\nHUMAN_REQUIRED\n\nThen politely explain that the request has been forwarded to a human support representative.\n\nDo not use HUMAN_REQUIRED when you successfully answer the customer's question."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -240,
+        -384
+      ],
+      "id": "830d8b14-c62f-44ba-8213-034ac4f6b887",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Customer chat",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        -368
+      ],
+      "id": "d5ff211e-1033-47ed-b40f-621af0b353ae",
+      "name": "Webhook",
+      "webhookId": "f740c73f-d70e-47e7-ba0a-9907384f0b55"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "customer-1",
+        "databaseName": "LabanoAcademyGroupA",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -208
+      ],
+      "id": "c9d04401-cb71-4a25-8159-c7db59cd113f",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "fonzpOa34zBLy924",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1JH1MJK6f1bifRNJBSI6Q3UyJyv3Iy-W7lajCNeOrI1A/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JH1MJK6f1bifRNJBSI6Q3UyJyv3Iy-W7lajCNeOrI1A/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Product Name ",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', `The product name that the customer is asking about.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -48,
+        -224
+      ],
+      "id": "672f7fd5-c6b0-4b05-adb9-f871a0d552b3",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zJVSo4eFumje9PXy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        -208
+      ],
+      "id": "af12ac3e-27a4-4cde-92af-ae803b1643d0",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KDOAA3ryNfmmeQsr",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d268313b-ffad-4bae-9758-388a56d31ca0",
+              "leftValue": "={{ $json.available}}",
+              "rightValue": "false",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "3fe1b602-3cc4-4de2-a875-66f3fb653419",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "6440fd95-1ee9-48e6-8b51-89c11069e619",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        -368
+      ],
+      "id": "a0081616-d01a-4a5d-8c53-ee95f566ee1c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "princeekeji@gmail.com",
+        "subject": "Human Support Required- Customer Request",
+        "message": "=A customer requires human assistance.  \nCustomer message: \n{{ $\n('Webhook').item.json.body.message}}\nAI response:\n{{ $('AI Agent').item.json.output}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        -464
+      ],
+      "id": "e44bd02c-d14b-48ef-ad56-56eefdf2bb5e",
+      "name": "Send a message",
+      "webhookId": "58c051f2-9fda-457b-afeb-ccbe758d038e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5JXpxTBqRdbkR794",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "Cyber-Trust1",
+          "mode": "list",
+          "cachedResultName": "Cyber-Trust1",
+          "cachedResultUrl": "https://github.com/Cyber-Trust1"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n-AI-chatbot",
+          "mode": "list",
+          "cachedResultName": "n8n-AI-chatbot",
+          "cachedResultUrl": "https://github.com/Cyber-Trust1/n8n-AI-chatbot"
+        },
+        "filePath": "README.md",
+        "fileContent": "# n8n AI Chatbot",
+        "commitMessage": "Add initial README file"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -656,
+        -448
+      ],
+      "id": "d5bca4e9-f70d-499e-82bf-f607ce9ad7e9",
+      "name": "Create a file",
+      "webhookId": "6e4e333d-8b56-4213-bf58-69e3b8a1adcf",
+      "credentials": {
+        "githubApi": {
+          "id": "8gtIaxx2Ts7YKcnO",
+          "name": "GitHub account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c29947d4-6250-4260-8d67-2d32be272bad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6edef1a65438abec48a7623bf42d78dfb93a165f33764ac3765f093b3822d9c3"
+  },
+  "nodeGroups": [],
+  "id": "rPkyPumwDyeoJCwe",
+  "tags": []
+}
